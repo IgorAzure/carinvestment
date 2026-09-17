@@ -10,7 +10,8 @@ def home():
 
 @app.route('/api/calcular', methods=['POST'])
 def calcular():
-    data = request.json()
+    data = request.json
+    
     preco = float(data['preco'])
     entrada = float(data.get('entrada', 0) or 0)
     taxa = float(data['taxa']) / 100
@@ -27,7 +28,11 @@ def calcular():
         
     resposta = {'pagamento_mensal': round(pagamento, 2)}
     
-    if Warning:
-        resposta['aviso'] = Warning
+    # if Warning:
+    #     resposta['aviso'] = Warning
         
     return jsonify(resposta)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

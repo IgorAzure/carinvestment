@@ -1,16 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Calculadora para compra de carro</title>
-    </head>
 
-    <body>
-        <div class="form-grid">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora para compra de carro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="form-grid">
+        <div class="input-group">
             <div class="input-group">
                 <label>NOME DO CARRO <span class="req">*</span></label>
-                <input type="text" id="nomeCarro" placeholder="Digite o nome de algum carro" autocomplete="off">
+                <!-- Agora é um input livre. O onchange dispara quando ele clica na sugestão -->
+                <input type="text" id="marcaInput" list="listaMarcas" placeholder="Digite a marca..." autocomplete="off"
+                    onchange="carregarModelosDaMarca()">
+                <datalist id="listaMarcas"></datalist>
+            </div>
+
+
+            <div class="input-group">
+                <label>MODELO DO CARRO <span class="req">*</span></label>
+                <!-- O atributo list="listaModelos" é o que ativa o autocomplete nativo -->
+                <input type="text" id="nomeCarro" list="listaModelos" placeholder="Escolha a marca primeiro"
+                    autocomplete="off" disabled>
+
+                <!-- O datalist fica invisível na tela, ele só guarda as opções -->
+                <datalist id="listaModelos"></datalist>
             </div>
 
             <div class="input-juros">
@@ -23,7 +40,26 @@
                 <input type="number" id="valorEntrada" placeholder="Ex: 10.000" step="0.01">
             </div>
 
-            <button class="btn-calcular" onclick="abrirModalMeses()">CALCULAR</button>
+            <button class="btn-calcular" onclick="testePreco()">CALCULAR</button>
         </div>
-    </body>
+
+        <div id="modalMeses" class="modal">
+            <div class="modal-content">
+                <h3>Em quantas vezes?</h3>
+                <select id="quantidadeMeses">
+                    <option value="12">12x</option>
+                    <option value="24" selected>24x</option>
+                    <option value="36">36x</option>
+                    <option value="48">48x</option>
+                </select>
+
+                <button>Ver Simulação</button>
+                <button class="btn-cancelar" onclick="fecharModalMeses()">Cancelar</button>
+            </div>
+        </div>
+
+
+        <script src="{{ url_for('static', filename='javascript/script.js') }}"></script>
+</body>
+
 </html>
