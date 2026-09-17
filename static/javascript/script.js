@@ -1,5 +1,5 @@
 
-const FIPE_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiI5OGE5YjI5ZS02MjA2LTRhMmYtYTYyZi01MWU2ODA2ZWVkZDkiLCJlbWFpbCI6InBhdWxhc2FjcmFtZW50bzkzQG91dGxvb2suY29tIiwianRpIjoiZmY4MDhmNmItZGZmMS00NTU0LWIwMDMtMDczNTkzOGIyNGRlIiwiaWF0IjoxNzg5Njc0MDg4fQ.NP9lkDhUpj62K9AqyDFtxRsahnT9BC8B-m105otNmmA"; 
+const FIPE_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJjZTFiNDgwNy1lOGRiLTRlZTEtYWU2ZS1kNzZkNzVmY2Q4MDQiLCJlbWFpbCI6Imh0dHBzLmlnb3IwMkBnbWFpbC5jb20iLCJqdGkiOiI1OWE1NDk0Mi1jYzlkLTQyYzItOGIxNS0xNTA0MWVhZjllMjMiLCJpYXQiOjE3ODk1MjA3Njl9.Vu-qXWtNObfipA5BlRDStMsgcCsRGBCA6oUjxqHWfIc"; 
 const FIPE_BASE_URL = "https://fipe.api.br/api/v2/cars";
 
 const fipeHeaders = {
@@ -7,13 +7,66 @@ const fipeHeaders = {
     "Authorization": `Bearer ${FIPE_API_KEY}`
 };
 
-function abrirModalMeses() { 
-    document.getElementById('modalMeses').style.display = 'flex'; 
+let dadosCarroGlobal;
+
+async function enviarDados(dadosCarro) {
+    try {
+        const resposta = await fetch("http://127.0.0.1:5000/resultado", {
+            method: "POST",
+
+            headers: {"Content-Type": "application/json"},
+
+            body: JSON.stringify(dadosCarro)
+        });
+           
+        const dadosResposta = await resposta.text()
+
+        document.documentElement.innerHTML = dadosResposta
+
+        console.log("Resposta do FLASK:", dadosResposta)
+
+    } catch(error) {
+        console.error("Erro ao enviar os dados", error);
+    }
 }
 
-function fecharModalMeses() { 
+async function abrirModalMeses() { 
+    document.getElementById('modalMeses').style.display = 'flex'; 
+
+    dadosCarroGlobal = await testePreco()
+
+    let juros = document.getElementById("valorJuros").value
+    let entrada = document.getElementById("valorEntrada").value
+
+    dadosCarroGlobal.juros = juros;
+    dadosCarroGlobal.entrada = entrada;
+
+    console.log(dadosCarro)
+}
+
+function fecharModalMeses() {
+
     document.getElementById('modalMeses').style.display = 'none'; 
 }
+
+function cancelarModalMeses() { 
+    document.getElementById('modalMeses').style.display = 'none'; 
+}
+
+function calcularFinanciamentoFinal() {
+
+    let meses = Number(
+        document.getElementById("quantidadeMeses").value
+    );
+
+    dadosCarroGlobal.meses = meses;
+
+    document.getElementById("dadosCarro").value =
+        JSON.stringify(dadosCarroGlobal);
+
+    document.getElementById("formResultado").submit();
+}
+
 async function testePreco() {
 
     const nomeMarcaDigitada = document.getElementById('marcaInput').value;
@@ -61,11 +114,16 @@ async function testePreco() {
         const dadosCarro = await resposta.json();
 
         // Exibe o resultado
-        console.log("=========================================");
-        console.log(`VEÍCULO: ${dadosCarro.brand} ${dadosCarro.model}`);
-        console.log(`ANO: ${dadosCarro.modelYear}`);
-        console.log(`PREÇO: ${dadosCarro.price}`);
-        console.log("=========================================");
+        // console.log("=========================================");
+        // console.log(`VEÍCULO: ${dadosCarro.brand} ${dadosCarro.model}`);
+        // console.log(`ANO: ${dadosCarro.modelYear}`);
+        // console.log(`PREÇO: ${dadosCarro.price}`);
+        // console.log("=========================================");
+
+        // const taxaJuros = document.getElementById("valorJuros").value;
+        // const entrada = document.getElementById("valorEntrada").value;
+
+        return dadosCarro;
 
     } catch (erro) {
         console.error("Erro de conexão:", erro);

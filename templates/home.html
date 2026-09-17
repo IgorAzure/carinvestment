@@ -9,6 +9,11 @@
 </head>
 
 <body>
+
+    <form id="formResultado" action="/resultado" method="POST">
+        <input type="hidden" name="dadosCarro" id="dadosCarro">
+    </form>
+
     <div class="form-grid">
         <div class="input-group">
             <div class="input-group">
@@ -40,7 +45,8 @@
                 <input type="number" id="valorEntrada" placeholder="Ex: 10.000" step="0.01">
             </div>
 
-            <button class="btn-calcular" onclick="testePreco()">CALCULAR</button>
+            <!-- <button class="btn-calcular" onclick="testePreco()">CALCULAR</button> -->
+            <button class="btn-calcular" onclick="abrirModalMeses()">CALCULAR</button>
         </div>
 
         <div id="modalMeses" class="modal">
@@ -53,7 +59,10 @@
                     <option value="48">48x</option>
                 </select>
 
-                <button>Ver Simulação</button>
+                <!-- <button class="btn-resultado" href="/resultado">Ver Simulação</button> -->
+                <button class="btn" onclick="calcularFinanciamentoFinal()">
+                    Ver resultado
+                </button>
                 <button class="btn-cancelar" onclick="fecharModalMeses()">Cancelar</button>
             </div>
         </div>

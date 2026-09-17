@@ -1,8 +1,17 @@
-import numpy_financial as npf
+import json
 import math
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
+
+@app.route('/resultado', methods=['POST'])
+def resultado():
+    
+    dadosCarro = json.loads(request.form["dadosCarro"])
+    
+    print(dadosCarro)
+    
+    return render_template("resultado.html", dadosCarro=dadosCarro)
 
 @app.route('/')
 def home():
