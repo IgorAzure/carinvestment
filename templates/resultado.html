@@ -6,19 +6,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultado</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-resultado.css') }}">
 </head>
 
 <body class="car-info">
-    <header>
-    </header>
+    <main class="resultado-container">
+        <section class="resumo-carro">
+            <div class="foto-carro">
+                {% if dadosCarro.imagem %}
+                    <div class="loading-Imagem" id="loadingImagem">
+                        <div class="spinner-imagem"></div>
+                    </div>
 
-    <p>{{ dadosCarro.brand }}</p>
-    <p>{{ dadosCarro.model }}</p>
-    <p>{{ dadosCarro.price }}</p>
-    <p>{{ dadosCarro.juros }}</p>
-    <p>{{ dadosCarro.entrada }}</p>
-    <p>{{ dadosCarro.meses }}</p>
+                    <img
+                        src="{{ dadosCarro.imagem }}"
+                        id="imagemCarro"
+                        alt="{{ dadosCarro.brand }} {{ dadosCarro.model }}"
+                        onload="imagemCarregando()"
+                        onerror="erroImagem()"
+                    >
+                {% else %}
+                    <div class="foto-indisponivel">
+                        <span>SEM IMAGEM</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="info-carro">
+                <h1>
+                    {{ dadosCarro.brand }} {{ dadosCarro.model }}
+                </h1>
+
+                <div class="detalhes-carro">
+                    <div class="detalhe-item">
+                        <span class="detalhe-label">Ano</span>
+                        <strong>{{ dadosCarro.modelYear }}</strong>
+                    </div>
+
+                    <div class="detalhe-item">
+                        <span class="detalhe-label">Tipo de combustivel</span>
+                        <strong>{{ dadosCarro.fuel }}</strong>
+                    </div>
+
+                    <div class="detalhe-item">
+                        <span class="detalhe-label">Codigo FIPE</span>
+                        <strong>{{ dadosCarro.codeFipe }}</strong>
+                    </div>
+                </div>
+
+                
+
+                <div class="preco-carro">
+                    <span>Valor do carro</span>
+
+                    <strong>{{ dadosCarro.price }}</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="resumo-financiamento">
+            <h2>
+                Resumo do financiamento
+            </h2>
+
+            <div class="dados-financiamento">
+                <div class="financiamento-item">
+                    <span>Entrada</span>
+
+                    <strong>
+                        R$ {{ entrada | moeda }}
+                    </strong>
+                </div>
+
+                <div class="financiamento-item">
+                    <span>Valor financiado</span>
+
+                    <strong>
+                        R$ {{ saldo | moeda }}
+                    </strong>
+                </div>
+
+                <div class="financiamento-item">
+                    <span>Juros ao mês</span>
+
+                    <strong>
+                        {{ "%.2f"|format(juros) }}%
+                    </strong>
+                </div>
+
+                <div class="financiamento-item">
+                    <span>Prazo</span>
+
+                    <strong>
+                        {{ dadosCarro.meses }} meses
+                    </strong>
+                </div>
+
+                <div class="financiamento-item">
+                    <span>Valor das parcelas</span>
+
+                    <strong>
+                        R$ {{ parcela | moeda }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="tabela">
+            <h2>
+                Tabela de amortizacao
+            </h2>
+
+            <div class="tabela-container">
+                <table>
+                    <thead>
+                        <th>Meses</th>
+                        <th>Juros</th>
+                        <th>Amortizacao (no mes)</th>
+                        <th>Saldo devedor</th>
+                    </thead>
+
+                    <tbody>
+                        {% for item in tabela %}
+                        <tr>
+                            <td>{{ item.mes }}</td>
+                            <td>R$ {{ item.juros | moeda }}</td>
+                            <td>R$ {{ item.amortizacao | moeda }}</td>
+                            <td>R$ {{ item.saldo | moeda }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="resumo-final">
+            <div class="resumo-card">
+                <span>Montante final</span>
+
+                <strong>
+                    R$ {{ valor_total | moeda }}
+                </strong>
+            </div>
+
+            <div class="resumo-card">
+                <span>Total de juros pagos</span>
+
+                <strong>
+                    R$ {{ total_juros | moeda }}
+                </strong>
+            </div>
+
+            <div class="resumo-card">
+                <span>Total amortizado</span>
+
+                <strong>
+                    R$ {{ total_amortizacao | moeda }}
+                </strong>
+            </div>
+        </section>
+
+        <div class="btn-voltar">
+            <a href="{{ url_for('home') }}" class="btn">
+                Nova simulacao
+            </a>
+        </div>
+    </main>
+
+    <script>
+        function imagemCarregando(){
+            const imagem = document.getElementById("imagemCarro");
+            const loading = document.getElementById("loadingImagem");
+
+            imagem.classList.add("carregada");
+
+            if (loading) {
+                loading.style.display = "none";
+            }
+        }
+
+        function erroImagem(){
+            const loading = document.getElementById("loadingImagem");
+
+            if (loading) {
+                loading.innerHTML = "<span>Imagem indisponivel</span>"
+            }
+        }
+    </script>
 </body>
-
 </html>
