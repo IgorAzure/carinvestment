@@ -335,8 +335,9 @@ def resultado():
         
         saldo_atual = novo_saldo
     
-    valor_total = sum(item["parcela"] for item in tabela)
+    total_parcelas = sum(item["parcela"] for item in tabela)
     
+    valor_total = entrada + total_parcelas
     
     return render_template(
         "resultado.html", 
