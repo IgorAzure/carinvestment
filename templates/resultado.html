@@ -13,23 +13,9 @@
     <main class="resultado-container">
         <section class="resumo-carro">
             <div class="foto-carro">
-                {% if dadosCarro.imagem %}
-                    <div class="loading-Imagem" id="loadingImagem">
-                        <div class="spinner-imagem"></div>
-                    </div>
-
-                    <img
-                        src="{{ dadosCarro.imagem }}"
-                        id="imagemCarro"
-                        alt="{{ dadosCarro.brand }} {{ dadosCarro.model }}"
-                        onload="imagemCarregando()"
-                        onerror="erroImagem()"
-                    >
-                {% else %}
                     <div class="foto-indisponivel">
                         <span>SEM IMAGEM</span>
                     </div>
-                {% endif %}
             </div>
             
             <div class="info-carro">
@@ -57,7 +43,7 @@
                 
 
                 <div class="preco-carro">
-                    <span>Valor do carro</span>
+                    <span>Valor do carro (segundo a Tabela Fipe)</span>
 
                     <strong>{{ dadosCarro.price }}</strong>
                 </div>

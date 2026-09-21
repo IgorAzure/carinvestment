@@ -1,264 +1,67 @@
 import json
-import math
 from flask import Flask, render_template, request, jsonify
 import requests
 import os
-import re
-import unicodedata
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
-pasta_imagens = os.path.join(
-    app.static_folder,
-    "imagens_carros"
-)
+FIPE_API_KEY = os.getenv("FIPE_API_KEY")
 
-os.makedirs(pasta_imagens, exist_ok=True)
+FIPE_BASE_URL = "https://fipe.api.br/api/v2/cars"
 
-print("novo py")
+def consultar_fipe(caminho):
+    try:
+        resposta = requests.get(
+            f"{FIPE_BASE_URL}/{caminho}",
+            headers={
+                "Authorization": f"Bearer {FIPE_API_KEY}",
+                "Accept": "application/json"
+            },
+            timeout=15
+        )
+
+        return (
+            jsonify(resposta.json()),
+            resposta.status_code
+        )
+
+    except requests.RequestException:
+        return jsonify({
+            "erro": "Não foi possível consultar a FIPE."
+        }), 502
+
+
+@app.route("/api/fipe/brands")
+def api_fipe_marcas():
+    return consultar_fipe("brands")
+
+
+@app.route("/api/fipe/brands/<marca>/models")
+def api_fipe_modelos(marca):
+    return consultar_fipe(
+        f"brands/{marca}/models"
+    )
+
+
+@app.route("/api/fipe/brands/<marca>/models/<modelo>/years")
+def api_fipe_anos(marca, modelo):
+    return consultar_fipe(
+        f"brands/{marca}/models/{modelo}/years"
+    )
+
+
+@app.route("/api/fipe/brands/<marca>/models/<modelo>/years/<ano>")
+def api_fipe_carro(marca, modelo, ano):
+    return consultar_fipe(
+        f"brands/{marca}/models/{modelo}/years/{ano}"
+    )
 
 @app.template_filter("moeda")
 def moeda(valor):
     return f"{float(valor):,.2f}".replace(",", "X").replace(".",",").replace("X",".")
-
-def buscar_imagem_carro(marca, modelo, ano):
-    
-    print("marca:", marca)
-    print("modelo:", modelo)
-    print("ano:", ano)
-    
-    nome_arquivo = criar_nome_imagem(
-        marca,
-        modelo,
-        ano    
-    )
-    
-    os.makedirs(
-        pasta_imagens,
-        exist_ok=True
-    )
-    
-    caminho = os.path.join(
-        pasta_imagens,
-        nome_arquivo
-    )
-    
-    print("PASTA IMAGENS:", pasta_imagens)
-    print("NOME ARQUIVO:", nome_arquivo)
-    print("CAMINHO FINAL:", caminho)
-    
-    if os.path.isfile(caminho):
-        print("USANDO IMAGEM LOCAL:", nome_arquivo)
-
-        return f"/static/imagens_carros/{nome_arquivo}"
-
-    CAR_IMAGE_API_KEY = "cimg_XvmrwmzS06JbOcykRle1Ke9duDdBDFTz"
-
-    headers = {
-        "Authorization": f"Bearer {CAR_IMAGE_API_KEY}",
-        "Accept": "application/json"
-    }
-
-    url_api_imagem = "https://carimage.dev/api/v1/images/car"
-    url_catalogo = "https://carimage.dev/api/v1/vehicles"
-
-    try:
-        parametros = {
-            "make": marca,
-            "model": modelo,
-            "year": ano,
-            "view": "front-3-4",
-            "color": "silver"
-        }
-
-        resposta = requests.get(
-            url_api_imagem,
-            params=parametros,
-            headers=headers,
-            timeout=10
-        )
-
-        print("CAR IMAGE STATUS:", resposta.status_code)
-
-        if resposta.status_code == 200:
-
-            dados_imagem = resposta.json()
-
-            url_imagem = extrair_url_imagem(
-                dados_imagem
-            )
-
-        elif resposta.status_code == 404:
-
-            print("Modelo FIPE não encontrado diretamente.")
-            print("Buscando modelo equivalente no catálogo...")
-
-            resposta_catalogo = requests.get(
-                url_catalogo,
-                params={
-                    "q": f"{marca} {modelo}"
-                },
-                headers=headers,
-                timeout=10
-            )
-
-            if resposta_catalogo.status_code != 200:
-                print(
-                    "Erro catálogo:",
-                    resposta_catalogo.status_code
-                )
-                return None
-
-            catalogo = resposta_catalogo.json()
-
-            resultados = (
-                catalogo
-                .get("data", {})
-                .get("results", [])
-            )
-
-            if not resultados:
-                print("Nenhum modelo encontrado no catálogo.")
-                return None
-            
-            resultado_escolhido = None
-
-            for resultado in resultados:
-
-                anos = resultado.get("years", [])
-
-                if int(ano) in anos:
-                    resultado_escolhido = resultado
-                    break
-
-            if resultado_escolhido is None:
-                print(
-                    f"Nenhum resultado encontrado para {ano}"
-                )
-                return None
-
-            marca_catalogo = resultado_escolhido["make_name"]
-            modelo_catalogo = resultado_escolhido["model_name"]
-
-            print(
-                "Modelo encontrado:",
-                marca_catalogo,
-                modelo_catalogo,
-                ano
-            )
-            
-            parametros_corrigidos = {
-                "make": marca_catalogo,
-                "model": modelo_catalogo,
-                "year": ano,
-                "view": "front-3-4",
-                "color": "silver"
-            }
-
-            resposta_imagem = requests.get(
-                url_api_imagem,
-                params=parametros_corrigidos,
-                headers=headers,
-                timeout=10
-            )
-
-            print(
-                "IMAGEM CORRIGIDA STATUS:",
-                resposta_imagem.status_code
-            )
-
-            if resposta_imagem.status_code != 200:
-                return None
-
-            dados_imagem = resposta_imagem.json()
-
-            url_imagem = extrair_url_imagem(
-                dados_imagem
-            )
-
-        else:
-
-            print(
-                "Erro CarImage:",
-                resposta.status_code,
-                resposta.text
-            )
-
-            return None
-        
-        if not url_imagem:
-            print("URL da imagem não encontrada.")
-            return None
-        
-        download = requests.get(
-            url_imagem,
-            timeout=30
-        )
-        
-        print("STATUS DOWNLOAD:", download.status_code)
-        print("CONTENT-TYPE:", download.headers.get("Content-Type"))
-        print("TAMANHO:", len(download.content))
-
-        if download.status_code != 200:
-            print("donwload falhou")
-            return url_imagem
-        
-        print("vou salvar em:", caminho)
-        
-        with open(caminho, "wb") as arquivo:
-            arquivo.write(download.content)
-            
-        print("arquivo salvo?", os.path.isfile(caminho))
-        print("imagem salva em:", caminho)
-        
-        return f"/static/imagens_carros/{nome_arquivo}"
-
-    except Exception as erro:
-
-        print(
-            "ERRO CAR IMAGE:",
-            repr(erro)
-        )
-
-        return None
-    
-def extrair_url_imagem(dados):
-    print("Tentando extrair imagem:", dados)
-
-    # formato:
-    # {"data": {"url": "..."}}
-    if isinstance(dados.get("data"), dict):
-
-        if dados["data"].get("url"):
-            return dados["data"]["url"]
-
-        if dados["data"].get("image_url"):
-            return dados["data"]["image_url"]
-
-    # formato:
-    # {"url": "..."}
-    if dados.get("url"):
-        return dados["url"]
-
-    # formato:
-    # {"image_url": "..."}
-    if dados.get("image_url"):
-        return dados["image_url"]
-
-    print("URL da imagem não encontrada no JSON.")
-
-    return None
-
-def criar_nome_imagem(marca, modelo, ano):
-    
-    nome = f"{marca}-{modelo}-{ano}"
-    
-    nome = unicodedata.normalize("NFKD", nome)
-    nome = nome.encode("ascii", "ignore").decode("ascii") 
-    nome = nome.lower()
-    nome = re.sub(r"[^a-z0-9]+", "-", nome)
-    
-    return nome.strip("-") + ".png"
 
 @app.route('/')
 def home():
@@ -266,21 +69,39 @@ def home():
 
 @app.route('/resultado', methods=['POST'])
 def resultado():
-    
     dadosCarro = json.loads(request.form["dadosCarro"])
     
-    imagem = buscar_imagem_carro(
-        dadosCarro["brand"],
-        dadosCarro["model"],
-        dadosCarro["modelYear"]
+    marca_id = dadosCarro["marcaId"]
+    modelo_id = dadosCarro["modeloId"]
+    ano_id = dadosCarro["anoId"]
+    
+    url = (
+        f"{FIPE_BASE_URL}/brands/{marca_id}"
+        f"/models/{modelo_id}"
+        f"/years/{ano_id}"
     )
     
-    print("imagem retornada", imagem)
-
-    dadosCarro["imagem"] = imagem
+    resposta_fipe = requests.get(
+        url,
+        headers={
+            "Authorization": f"Bearer {FIPE_API_KEY}",
+            "Accept": "application/json"
+        }
+    )
+    
+    if not resposta_fipe.ok:
+        return "Erro ao consultar tabela Fipe", 502
+    
+    carro_fipe = resposta_fipe.json()
+    
+    dadosCarro["brand"] = carro_fipe["brand"]
+    dadosCarro["model"] = carro_fipe["model"]
+    dadosCarro["modelYear"] = carro_fipe["modelYear"]
+    dadosCarro["price"] = carro_fipe["price"]
 
     # dados recebidos
-    preco = float(dadosCarro['price']
+    preco = float(
+        carro_fipe['price']
                   .replace("R$", "")
                   .replace(".", "")
                   .replace(",", "."))
@@ -288,6 +109,22 @@ def resultado():
     entrada = float(dadosCarro.get("entrada") or 0)
     juros = float(dadosCarro.get("juros") or 0)
     meses = int(dadosCarro["meses"])
+    
+    if juros < 1:
+        return "Taxa de juros invalida", 400
+    
+    if entrada < 0:
+        return "Valor de entrada invalido", 400
+    
+    if entrada >= preco:
+        return "A entrada nao pode ser maior do que o valor do veiculo", 400
+    
+    MESES_PERMITIDOS = {
+        12, 24, 36, 48
+    }
+    
+    if meses not in MESES_PERMITIDOS:
+        return "Quantidade de meses invalida", 400
     
     saldo = preco - entrada
     
@@ -352,31 +189,5 @@ def resultado():
         saldo=round(saldo, 2),
     )
 
-# @app.route('/api/calcular', methods=['POST'])
-# def calcular():
-#     # data = request.json
-    
-#     # preco = float(data['preco'])
-#     # entrada = float(data.get('entrada', 0) or 0)
-#     # taxa = float(data['taxa']) / 100
-#     # meses = int(data['meses'])
-    
-#     # taxa_mensal = taxa / 12 if data['tipo_taxa'] == 'anual' else taxa
-    
-#     # principal = preco - entrada
-    
-#     # if taxa_mensal == 0:
-#     #     pagamento = principal / meses
-#     # else:
-#     #     pagamento = principal * (taxa_mensal * (1 + taxa_mensal)**meses) / ((1 + taxa_mensal)**meses - 1)
-        
-#     # resposta = {'pagamento_mensal': round(pagamento, 2)}
-    
-#     # # if Warning:
-#     # #     resposta['aviso'] = Warning
-        
-#     # return jsonify(resposta)
-
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)

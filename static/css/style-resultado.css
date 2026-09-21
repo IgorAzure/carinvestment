@@ -84,36 +84,6 @@ body.car-info {
     text-transform: uppercase;
 }
 
-.loading-imagem {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transform: none !important;
-    background: #0e1013;
-    z-index: 10;
-}
-
-.spinner-imagem {
-    width: 26px;
-    height: 26px;
-    border: 2px solid #292d35;
-    border-top: 2px solid #7695ff;
-    border-radius: 50%;
-    animation: 
-        girarImagem 0.7s linear infinite;
-}
-
-@keyframes girarImagem {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .info-carro {
     position: relative;
     min-width: 0;
