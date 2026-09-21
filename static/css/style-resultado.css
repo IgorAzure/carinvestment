@@ -483,6 +483,12 @@ body.car-info {
 }
 
 @media (max-width: 600px) {
+    #input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
     .resultado-container {
         width: calc(100% - 28px);
         padding: 24px 0 45px;
